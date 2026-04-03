@@ -197,9 +197,10 @@ _push_vercel_files() {
 
   # Auto-link if needed
   if [[ ! -d "$source/.vercel" ]]; then
-    msg "  Linking to Vercel..."
-    if ! (cd "$source" && timeout 30 npx vercel link --yes 2>/dev/null); then
-      ui_warn "Vercel link failed or timed out"
+    msg "  Project not linked to Vercel. Launching vercel link..."
+    msg ""
+    if ! (cd "$source" && npx vercel link); then
+      ui_warn "Vercel link failed. Run 'npx vercel link' manually if needed."
       echo 0; return
     fi
   fi
