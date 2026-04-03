@@ -40,6 +40,8 @@ _menu_project() {
     "rotate     │ ${C_DIM}⟳${C_RESET}  Rotate key"
   )
 
+  local footer="^P push · ^L local · ^V vercel · ^D diff · ^B browse"
+
   local tmpfile
   tmpfile="$(mktemp)"
 
@@ -51,18 +53,31 @@ _menu_project() {
     --layout=reverse \
     --border \
     --header "$header" \
+    --footer "$footer" \
+    --expect=ctrl-p,ctrl-l,ctrl-v,ctrl-d,ctrl-b \
     --preview "bash '$ev_bin' _hub-preview {1} '$name'" \
     --preview-window "right:50%:wrap" \
     --delimiter "│" \
     --with-nth 2.. \
   > "$tmpfile" || { rm -f "$tmpfile"; return 0; }
 
+  local key
+  key="$(head -1 "$tmpfile")"
   local choice
-  choice="$(cat "$tmpfile")"
+  choice="$(tail -n +2 "$tmpfile")"
   rm -f "$tmpfile"
 
   local cmd
-  cmd="$(echo "$choice" | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}')"
+  case "$key" in
+    ctrl-p) cmd="push" ;;
+    ctrl-l) cmd="push-local" ;;
+    ctrl-v) cmd="push-vercel" ;;
+    ctrl-d) cmd="diff" ;;
+    ctrl-b) cmd="list" ;;
+    *)
+      cmd="$(echo "$choice" | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}')"
+      ;;
+  esac
 
   case "$cmd" in
     push)         cmd_push "$name" ;;
@@ -92,6 +107,8 @@ _menu_global() {
     "rotate     │ ${C_DIM}⟳${C_RESET}  Rotate key"
   )
 
+  local footer="^B browse"
+
   local tmpfile
   tmpfile="$(mktemp)"
 
@@ -103,18 +120,27 @@ _menu_global() {
     --layout=reverse \
     --border \
     --header "$header" \
+    --footer "$footer" \
+    --expect=ctrl-b \
     --preview "bash '$ev_bin' _hub-preview {1}" \
     --preview-window "right:50%:wrap" \
     --delimiter "│" \
     --with-nth 2.. \
   > "$tmpfile" || { rm -f "$tmpfile"; return 0; }
 
+  local key
+  key="$(head -1 "$tmpfile")"
   local choice
-  choice="$(cat "$tmpfile")"
+  choice="$(tail -n +2 "$tmpfile")"
   rm -f "$tmpfile"
 
   local cmd
-  cmd="$(echo "$choice" | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}')"
+  case "$key" in
+    ctrl-b) cmd="list" ;;
+    *)
+      cmd="$(echo "$choice" | awk -F'│' '{gsub(/^[ \t]+|[ \t]+$/, "", $1); print $1}')"
+      ;;
+  esac
 
   case "$cmd" in
     list)    _menu_list ;;
