@@ -65,6 +65,15 @@ run_init() {
   # 2. Vault repo
   if vault_exists; then
     msg "Vault found at ${C_2}$ENVOY_VAULT${C_RESET}"
+    # Auto-detect repo from git remote if not set
+    if [[ -z "$ENVOY_REPO" ]]; then
+      local remote_url
+      remote_url=$(git -C "$ENVOY_VAULT" remote get-url origin 2>/dev/null)
+      if [[ -n "$remote_url" ]]; then
+        ENVOY_REPO=$(echo "$remote_url" | sed 's|.*github\.com[:/]||;s|\.git$||')
+        msg "Detected repo: ${C_2}$ENVOY_REPO${C_RESET}"
+      fi
+    fi
   else
     msg ""
     local choice
