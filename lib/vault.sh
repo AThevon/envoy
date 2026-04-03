@@ -199,8 +199,8 @@ _push_vercel_files() {
   if [[ ! -d "$source/.vercel" ]]; then
     msg "  Project not linked to Vercel. Launching vercel link..."
     msg ""
-    if ! (cd "$source" && npx vercel link); then
-      ui_warn "Vercel link failed. Run 'npx vercel link' manually if needed."
+    if ! (cd "$source" && npx -y vercel link); then
+      ui_warn "Vercel link failed. Run 'npx -y vercel link' manually if needed."
       echo 0; return
     fi
   fi
@@ -218,7 +218,7 @@ _push_vercel_files() {
   for env in development preview production; do
     local fname=".env.$env"
     msg "  Pulling $env..."
-    if (cd "$source" && timeout 30 npx vercel env pull "$tmpdir/$fname" --environment "$env" 2>/dev/null) && [[ -f "$tmpdir/$fname" ]]; then
+    if (cd "$source" && timeout 30 npx -y vercel env pull "$tmpdir/$fname" --environment "$env" 2>/dev/null) && [[ -f "$tmpdir/$fname" ]]; then
       encrypt_file "$tmpdir/$fname" "$vault_dir/${fname}.age"
       msg "  ${C_2}+${C_RESET} $fname"
       count=$((count + 1))
