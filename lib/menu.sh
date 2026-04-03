@@ -12,6 +12,30 @@ cmd_interactive() {
   fi
 }
 
+_build_header() {
+  local subtitle="${1:-}"
+  local header=""
+  header+="${C_1} ▄▄▄▄▄▄▄${C_2} ▄▄▄    ▄▄▄${C_3} ▄▄▄▄  ▄▄▄▄${C_4}   ▄▄▄▄▄${C_5}   ▄▄▄   ▄▄▄${C_RESET}"$'\n'
+  header+="${C_1}███▀▀▀▀▀${C_2} ████▄  ███${C_3} ▀███  ███▀${C_4} ▄███████▄${C_5} ███   ███${C_RESET}"$'\n'
+  header+="${C_1}███▄▄   ${C_2} ███▀██▄███${C_3}  ███  ███${C_4}  ███   ███${C_5} ▀███▄███▀${C_RESET}"$'\n'
+  header+="${C_1}███     ${C_2} ███  ▀████${C_3}  ███▄▄███${C_4}  ███▄▄▄███${C_5}   ▀███▀${C_RESET}"$'\n'
+  header+="${C_1}▀███████${C_2} ███    ███${C_3}   ▀████▀${C_4}    ▀█████▀${C_5}     ███${C_RESET}"$'\n'
+  if [[ -n "$subtitle" ]]; then
+    header+="${C_DIM}${subtitle}${C_RESET}"
+  fi
+  echo "$header"
+}
+
+_preview_cmd() {
+  # Generates a preview script for fzf that shows description based on icon
+  cat <<'PREVIEW_SCRIPT'
+    line={}
+    desc=$(echo "$line" | sed 's/^[^ ]* //' | cut -d'|' -f1)
+    detail=$(echo "$line" | cut -d'|' -f2)
+    printf "\033[1m%s\033[0m\n\n%s\n" "$desc" "$detail"
+PREVIEW_SCRIPT
+}
+
 _menu_project() {
   local name="$1"
   local vault_status="not in vault"
@@ -22,42 +46,46 @@ _menu_project() {
   fi
 
   local header
-  header=$(printf '%b' "${C_2}${name}${C_RESET}  ${C_DIM}${vault_status}${C_RESET}")
-  local footer="Enter select"
+  header=$(_build_header "  ${C_2}${name}${C_RESET}  ${C_DIM}${vault_status}${C_RESET}")
 
-  local actions="push|Push all .env files (local + Vercel)|Pushes local .env files and, if a Vercel project is detected, offers to pull and save Vercel envs too.
-push-local|Push local .env files only|Encrypts .env* files from your project and saves them to the vault.
-push-vercel|Push Vercel env vars only|Downloads development, preview, and production env vars from Vercel, encrypts and saves to vault.
-pull|Restore .env files from the vault|Decrypts .env files from the vault and copies them into your project.
-diff|Compare local vs vault|Shows line-by-line differences between your local .env files and what's in the vault.
----|──────────────|
-list|All projects in vault|Browse all projects stored in the vault.
-clean|Remove a project from vault|Select a project to permanently remove from the vault (with confirmation).
-config|View and edit settings|Modify vault path, key path, projects directory, and repo settings.
-rotate|Generate new age key|Creates a new age key, re-encrypts all vault files, and displays the new key to save."
+  local actions
+  actions=$(cat <<EOF
+ Push all|Encrypt local .env files and pull Vercel envs (if detected). Saves everything to the vault.|push
+ Push local|Encrypt only local .env files (.env, .env.local, etc.) and save to the vault.|push-local
+ Push Vercel|Pull development, preview and production env vars from Vercel, encrypt and save.|push-vercel
+ Pull|Decrypt .env files from the vault and restore them into your project.|pull
+ Diff|Line-by-line comparison between your local .env files and what's stored in the vault.|diff
+── Global ─────────────────────|──────|---
+ Browse vault|Browse all projects stored in the vault and manage them.|list
+ Clean|Select a project to permanently remove from the vault.|clean
+ Config|View and edit vault path, key path, projects directory and repo.|config
+ Rotate key|Generate a new age key, re-encrypt all vault files, and display the key to save.|rotate
+EOF
+)
 
   local selected
   selected=$(echo "$actions" | \
-    fzf --height=60% \
+    fzf --height=80% \
         --layout=reverse \
         --border \
         --ansi \
+        --no-sort \
         --header="$header" \
-        --footer="$footer" \
+        --footer=" Enter select" \
         --delimiter='|' \
         --with-nth=1 \
-        --preview='
+        --preview="
           line={};
-          desc=$(echo "$line" | cut -d"|" -f2);
-          detail=$(echo "$line" | cut -d"|" -f3);
-          printf "\033[1m%s\033[0m\n\n%s\n" "$desc" "$detail"
-        ' \
-        --preview-window=right:50%:wrap)
+          desc=\$(echo \"\$line\" | cut -d'|' -f1 | sed 's/^[^ ]* //');
+          detail=\$(echo \"\$line\" | cut -d'|' -f2);
+          printf '\033[1m%s\033[0m\n\n%s\n' \"\$desc\" \"\$detail\"
+        " \
+        --preview-window=right:45%:wrap)
 
   [[ -z "$selected" ]] && return 0
 
   local cmd
-  cmd=$(echo "$selected" | cut -d'|' -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  cmd=$(echo "$selected" | cut -d'|' -f3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
   case "$cmd" in
     push)         cmd_push "$name" ;;
@@ -74,34 +102,40 @@ rotate|Generate new age key|Creates a new age key, re-encrypts all vault files, 
 
 _menu_global() {
   local header
-  header=$(printf '%b' "${C_2}envoy${C_RESET}  ${C_DIM}encrypted .env vault${C_RESET}")
+  header=$(_build_header "  ${C_DIM}encrypted .env vault${C_RESET}")
 
-  local actions="list|All projects in vault|Browse all projects stored in the vault and select one to manage.
-clean|Remove a project from vault|Select a project to permanently remove from the vault (with confirmation).
-config|View and edit settings|Modify vault path, key path, projects directory, and repo settings.
-rotate|Generate new age key|Creates a new age key, re-encrypts all vault files, and displays the new key to save."
+  local actions
+  actions=$(cat <<EOF
+ Browse vault|Browse all projects stored in the vault and manage them.|list
+ Clean|Select a project to permanently remove from the vault.|clean
+ Config|View and edit vault path, key path, projects directory and repo.|config
+ Rotate key|Generate a new age key, re-encrypt all vault files, and display the key to save.|rotate
+EOF
+)
 
   local selected
   selected=$(echo "$actions" | \
-    fzf --height=40% \
+    fzf --height=60% \
         --layout=reverse \
         --border \
         --ansi \
+        --no-sort \
         --header="$header" \
+        --footer=" Enter select" \
         --delimiter='|' \
         --with-nth=1 \
-        --preview='
+        --preview="
           line={};
-          desc=$(echo "$line" | cut -d"|" -f2);
-          detail=$(echo "$line" | cut -d"|" -f3);
-          printf "\033[1m%s\033[0m\n\n%s\n" "$desc" "$detail"
-        ' \
-        --preview-window=right:50%:wrap)
+          desc=\$(echo \"\$line\" | cut -d'|' -f1 | sed 's/^[^ ]* //');
+          detail=\$(echo \"\$line\" | cut -d'|' -f2);
+          printf '\033[1m%s\033[0m\n\n%s\n' \"\$desc\" \"\$detail\"
+        " \
+        --preview-window=right:45%:wrap)
 
   [[ -z "$selected" ]] && return 0
 
   local cmd
-  cmd=$(echo "$selected" | cut -d'|' -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  cmd=$(echo "$selected" | cut -d'|' -f3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
   case "$cmd" in
     list)    _menu_list ;;
@@ -120,7 +154,9 @@ _menu_list() {
     [[ "$name" == ".git" ]] && continue
     local files
     files=$(find_age_files "$dir" | xargs -I{} basename {} .age 2>/dev/null | tr '\n' ' ')
-    entries+=("${name}|${files}")
+    local count
+    count=$(find_age_files "$dir" | wc -l)
+    entries+=(" ${name}  ${C_DIM}${count} file(s)${C_RESET}|${files}")
   done
 
   if [[ ${#entries[@]} -eq 0 ]]; then
@@ -129,34 +165,33 @@ _menu_list() {
   fi
 
   local header
-  header=$(printf '%b' "${C_2}vault${C_RESET}  ${C_DIM}select a project${C_RESET}")
+  header=$(_build_header "  ${C_DIM}select a project${C_RESET}")
 
   local selected
   selected=$(printf '%s\n' "${entries[@]}" | \
-    fzf --height=50% \
+    fzf --height=60% \
         --layout=reverse \
         --border \
         --ansi \
+        --no-sort \
         --header="$header" \
+        --footer=" Enter select" \
         --delimiter='|' \
         --with-nth=1 \
         --preview='
-          name=$(echo {} | cut -d"|" -f1);
           files=$(echo {} | cut -d"|" -f2);
-          printf "\033[1m%s\033[0m\n\n" "$name";
-          printf "\033[38;2;52;211;153mFiles:\033[0m\n";
+          printf "\033[1mEncrypted files\033[0m\n\n";
           for f in $files; do
-            printf "  %s\n" "$f";
+            printf "  \033[38;2;52;211;153m\033[0m %s\n" "$f";
           done
         ' \
-        --preview-window=right:50%:wrap)
+        --preview-window=right:45%:wrap)
 
   [[ -z "$selected" ]] && return 0
 
   local name
-  name=$(echo "$selected" | cut -d'|' -f1)
+  name=$(echo "$selected" | sed 's/^ [^ ]* //' | awk '{print $1}')
 
-  # Show actions for this project
   _menu_vault_project "$name"
 }
 
@@ -164,39 +199,51 @@ _menu_vault_project() {
   local name="$1"
   local file_count
   file_count=$(find_age_files "$ENVOY_VAULT/$name" | wc -l)
+  local files
+  files=$(find_age_files "$ENVOY_VAULT/$name" | xargs -I{} basename {} .age 2>/dev/null | tr '\n' ' ')
 
   local header
-  header=$(printf '%b' "${C_2}${name}${C_RESET}  ${C_DIM}${file_count} file(s)${C_RESET}")
+  header=$(_build_header "  ${C_2}${name}${C_RESET}  ${C_DIM}${file_count} file(s)${C_RESET}")
 
-  local actions="pull|Restore .env files|Decrypts and copies .env files into ~/projects/${name}
-diff|Compare with local|Shows line-by-line differences between local and vault versions.
-clean|Remove from vault|Permanently deletes ${name} from the vault (with confirmation)."
+  local actions
+  actions=$(cat <<EOF
+ Pull|Decrypt and copy .env files into ~/projects/${name}|pull
+ Diff|Line-by-line comparison between local and vault versions|diff
+ Remove|Permanently delete ${name} from the vault|clean
+EOF
+)
 
   local selected
   selected=$(echo "$actions" | \
-    fzf --height=30% \
+    fzf --height=50% \
         --layout=reverse \
         --border \
         --ansi \
+        --no-sort \
         --header="$header" \
+        --footer=" Enter select" \
         --delimiter='|' \
         --with-nth=1 \
-        --preview='
+        --preview="
           line={};
-          desc=$(echo "$line" | cut -d"|" -f2);
-          detail=$(echo "$line" | cut -d"|" -f3);
-          printf "\033[1m%s\033[0m\n\n%s\n" "$desc" "$detail"
-        ' \
-        --preview-window=right:50%:wrap)
+          desc=\$(echo \"\$line\" | cut -d'|' -f1 | sed 's/^[^ ]* //');
+          detail=\$(echo \"\$line\" | cut -d'|' -f2);
+          printf '\033[1m%s\033[0m\n\n%s\n' \"\$desc\" \"\$detail\";
+          printf '\n\033[38;2;52;211;153mFiles:\033[0m\n';
+          for f in ${files}; do
+            printf '  %s\n' \"\$f\";
+          done
+        " \
+        --preview-window=right:45%:wrap)
 
   [[ -z "$selected" ]] && return 0
 
   local cmd
-  cmd=$(echo "$selected" | cut -d'|' -f1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  cmd=$(echo "$selected" | cut -d'|' -f3 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
   case "$cmd" in
-    pull)   cmd_pull "$name" ;;
-    diff)   cmd_diff "$name" ;;
+    pull) cmd_pull "$name" ;;
+    diff) cmd_diff "$name" ;;
     clean)
       if ui_confirm "Remove $name from the vault?"; then
         rm -rf "$ENVOY_VAULT/$name"
