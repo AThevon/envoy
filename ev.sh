@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # =============================================================================
-# envoy - Encrypted .env vault manager
+# envora - Encrypted .env vault manager
 # =============================================================================
 # Manages .env files across projects with age encryption and git-backed storage.
 # All UI messages go to stderr, only paths/data go to stdout.
@@ -12,8 +12,8 @@ VERSION="0.2.0"
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LIB_DIR="${ENVOY_LIB:-$SCRIPT_DIR/lib}"
-ENVOY_BIN="${BASH_SOURCE[0]}"
+LIB_DIR="${ENVORA_LIB:-$SCRIPT_DIR/lib}"
+ENVORA_BIN="${BASH_SOURCE[0]}"
 
 # Load libs
 for lib in ui config vault crypto provider menu; do

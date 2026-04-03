@@ -16,8 +16,8 @@ _menu_project() {
   local name="$1"
   local vault_status="not in vault"
   local file_count=0
-  if [[ -d "$ENVOY_VAULT/$name" ]]; then
-    file_count=$(find_age_files "$ENVOY_VAULT/$name" | wc -l)
+  if [[ -d "$ENVORA_VAULT/$name" ]]; then
+    file_count=$(find_age_files "$ENVORA_VAULT/$name" | wc -l)
     vault_status="$file_count file(s) in vault"
   fi
 
@@ -26,7 +26,7 @@ _menu_project() {
   local header
   header="$(printf '%b' "${C_2}${name}${C_RESET} ${C_DIM}${vault_status}${C_RESET} │ ${C_DIM}ESC quit${C_RESET}")"
 
-  local ev_bin="${ENVOY_BIN:-$0}"
+  local ev_bin="${ENVORA_BIN:-$0}"
 
   local menu_items=(
     "push       │ ${C_2}⊕${C_RESET}  Push all"
@@ -97,9 +97,9 @@ _menu_global() {
   ui_header
 
   local header
-  header="$(printf '%b' "${C_2}envoy${C_RESET} ${C_DIM}v${VERSION}${C_RESET} │ ${C_DIM}ESC quit${C_RESET}")"
+  header="$(printf '%b' "${C_2}envora${C_RESET} ${C_DIM}v${VERSION}${C_RESET} │ ${C_DIM}ESC quit${C_RESET}")"
 
-  local ev_bin="${ENVOY_BIN:-$0}"
+  local ev_bin="${ENVORA_BIN:-$0}"
 
   local menu_items=(
     "list       │ ${C_2}☰${C_RESET}  Browse vault"
@@ -229,7 +229,7 @@ hub_preview() {
     config)
       echo -e "${D}⚙${R}  Config"
       echo ""
-      echo "View and edit envoy settings."
+      echo "View and edit envora settings."
       echo ""
       echo "• Vault path"
       echo "• Age key path"
@@ -252,7 +252,7 @@ hub_preview() {
 
 _menu_list() {
   local entries=()
-  for dir in "$ENVOY_VAULT"/*/; do
+  for dir in "$ENVORA_VAULT"/*/; do
     [[ -d "$dir" ]] || continue
     local name
     name=$(basename "$dir")
@@ -267,7 +267,7 @@ _menu_list() {
     return 0
   fi
 
-  local ev_bin="${ENVOY_BIN:-$0}"
+  local ev_bin="${ENVORA_BIN:-$0}"
   local header
   header="$(printf '%b' "${C_2}vault${C_RESET} │ ${C_DIM}select a project${C_RESET}")"
 
@@ -303,7 +303,7 @@ _menu_list() {
 # List preview - called by fzf
 list_preview() {
   local name="$1"
-  local vault_dir="${ENVOY_VAULT:-$HOME/.env-vault}/$name"
+  local vault_dir="${ENVORA_VAULT:-$HOME/.env-vault}/$name"
   local G=$'\033[38;2;52;211;153m' R=$'\033[0m' B=$'\033[1m'
 
   echo -e "${B}${name}${R}"
@@ -319,12 +319,12 @@ list_preview() {
 _menu_vault_project() {
   local name="$1"
   local file_count
-  file_count=$(find_age_files "$ENVOY_VAULT/$name" | wc -l)
+  file_count=$(find_age_files "$ENVORA_VAULT/$name" | wc -l)
 
   local header
   header="$(printf '%b' "${C_2}${name}${C_RESET} ${C_DIM}${file_count} file(s)${C_RESET}")"
 
-  local ev_bin="${ENVOY_BIN:-$0}"
+  local ev_bin="${ENVORA_BIN:-$0}"
 
   local menu_items=(
     "pull  │ ${C_2}↓${C_RESET}  Pull"
@@ -361,10 +361,10 @@ _menu_vault_project() {
     diff) cmd_diff "$name" ;;
     clean)
       if ui_confirm "Remove $name from the vault?"; then
-        rm -rf "$ENVOY_VAULT/$name"
-        git -C "$ENVOY_VAULT" add -A
-        git -C "$ENVOY_VAULT" commit -m "clean: remove $name" -q 2>/dev/null
-        git -C "$ENVOY_VAULT" push -q 2>/dev/null
+        rm -rf "$ENVORA_VAULT/$name"
+        git -C "$ENVORA_VAULT" add -A
+        git -C "$ENVORA_VAULT" commit -m "clean: remove $name" -q 2>/dev/null
+        git -C "$ENVORA_VAULT" push -q 2>/dev/null
         ui_success "Removed $name from vault"
       fi
       ;;

@@ -1,5 +1,5 @@
 {
-  description = "envoy - Encrypted .env vault manager";
+  description = "envora - Encrypted .env vault manager";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -12,13 +12,13 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         packages = {
-          envoy = pkgs.callPackage ./default.nix {};
-          default = self.packages.${system}.envoy;
+          envora = pkgs.callPackage ./default.nix {};
+          default = self.packages.${system}.envora;
         };
       }
     ) // {
       overlays.default = final: prev: {
-        envoy = final.callPackage ./default.nix {};
+        envora = final.callPackage ./default.nix {};
       };
     };
 }

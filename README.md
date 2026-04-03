@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="envoy" width="540" />
+  <img src="assets/logo.svg" alt="envora" width="540" />
 </p>
 
-<h1 align="center">envoy</h1>
+<h1 align="center">envora</h1>
 
 <p align="center">
   <strong>Encrypted .env vault manager</strong><br>
@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AThevon/envoy/releases"><img src="https://img.shields.io/github/v/release/AThevon/envoy?style=flat-square&color=10B981" alt="Release" /></a>
-  <a href="https://github.com/AThevon/envoy/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AThevon/envoy?style=flat-square&color=10B981" alt="License" /></a>
+  <a href="https://github.com/AThevon/envora/releases"><img src="https://img.shields.io/github/v/release/AThevon/envora?style=flat-square&color=10B981" alt="Release" /></a>
+  <a href="https://github.com/AThevon/envora/blob/main/LICENSE"><img src="https://img.shields.io/github/license/AThevon/envora?style=flat-square&color=10B981" alt="License" /></a>
   <a href="https://nixos.org"><img src="https://img.shields.io/badge/nix-flake-10B981?style=flat-square&logo=nixos&logoColor=white" alt="Nix Flake" /></a>
 </p>
 
@@ -19,7 +19,7 @@
 
 ## Why
 
-Your `.env` files contain secrets that can't go in git. But they need to exist on every machine you work from. Envoy solves this by keeping them in a **private git repo, encrypted with [age](https://github.com/FiloSottile/age)**. Even if the repo is compromised, your secrets stay safe.
+Your `.env` files contain secrets that can't go in git. But they need to exist on every machine you work from. Envora solves this by keeping them in a **private git repo, encrypted with [age](https://github.com/FiloSottile/age)**. Even if the repo is compromised, your secrets stay safe.
 
 ## How it works
 
@@ -40,15 +40,15 @@ another-machine    <--  ev pull  <--  vault/your-project/.env.age  <------'
 
 ```nix
 # flake.nix
-envoy = {
-  url = "github:AThevon/envoy";
+envora = {
+  url = "github:AThevon/envora";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
 
 ```nix
 # packages
-envoy.packages.${system}.default
+envora.packages.${system}.default
 ```
 
 ### Manual
@@ -56,8 +56,8 @@ envoy.packages.${system}.default
 Requires: `age`, `fzf`, `gum`, `gh`, `jq`, `git`
 
 ```bash
-git clone https://github.com/AThevon/envoy.git
-cd envoy
+git clone https://github.com/AThevon/envora.git
+cd envora
 chmod +x ev.sh
 ./ev.sh
 ```
@@ -109,13 +109,13 @@ Run `ev` without arguments for an interactive menu:
 
 ## Configuration
 
-Stored in `~/.envoyrc`:
+Stored in `~/.envorarc`:
 
 ```bash
-ENVOY_VAULT="$HOME/.env-vault"       # Path to vault directory
-ENVOY_KEY="$HOME/.age/key.txt"       # Path to age private key
-ENVOY_PROJECTS="$HOME/projects"      # Path to projects directory
-ENVOY_REPO="user/env-vault"          # GitHub repo for the vault
+ENVORA_VAULT="$HOME/.env-vault"       # Path to vault directory
+ENVORA_KEY="$HOME/.age/key.txt"       # Path to age private key
+ENVORA_PROJECTS="$HOME/projects"      # Path to projects directory
+ENVORA_REPO="user/env-vault"          # GitHub repo for the vault
 ```
 
 Edit with `ev config`.
@@ -129,7 +129,7 @@ Edit with `ev config`.
 
 ## Providers
 
-Envoy can pull environment variables directly from cloud platforms:
+Envora can pull environment variables directly from cloud platforms:
 
 - **Vercel** - `ev vercel` pulls development, preview, and production env vars
 

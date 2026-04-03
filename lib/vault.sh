@@ -2,7 +2,7 @@
 # lib/vault.sh - Vault operations (push, pull, diff, list, clean, init)
 
 vault_exists() {
-  [[ -d "$ENVOY_VAULT/.git" ]]
+  [[ -d "$ENVORA_VAULT/.git" ]]
 }
 
 # Detect current project name from git repo
@@ -31,7 +31,7 @@ resolve_project() {
 # Resolve project source dir
 resolve_source() {
   local name="$1"
-  local dir="$ENVOY_PROJECTS/$name"
+  local dir="$ENVORA_PROJECTS/$name"
   if [[ "$PWD" == *"/$name"* ]]; then
     # We're inside the project
     git rev-parse --show-toplevel 2>/dev/null || echo "$dir"
@@ -41,21 +41,21 @@ resolve_source() {
 }
 
 run_init() {
-  msg "${C_BOLD}Setting up envoy vault${C_RESET}"
+  msg "${C_BOLD}Setting up envora vault${C_RESET}"
   msg ""
 
   # 1. Age key
-  if [[ -f "$ENVOY_KEY" ]]; then
-    msg "Age key found at ${C_2}$ENVOY_KEY${C_RESET}"
+  if [[ -f "$ENVORA_KEY" ]]; then
+    msg "Age key found at ${C_2}$ENVORA_KEY${C_RESET}"
   else
     msg "Generating age key..."
-    mkdir -p "$(dirname "$ENVOY_KEY")"
-    age-keygen -o "$ENVOY_KEY" 2>&1 >&2
-    chmod 600 "$ENVOY_KEY"
+    mkdir -p "$(dirname "$ENVORA_KEY")"
+    age-keygen -o "$ENVORA_KEY" 2>&1 >&2
+    chmod 600 "$ENVORA_KEY"
     msg ""
     msg "${C_BOLD}Save this key in your password manager:${C_RESET}"
     msg ""
-    cat "$ENVOY_KEY" >&2
+    cat "$ENVORA_KEY" >&2
     msg ""
     if ! ui_confirm "Key saved? Continue?"; then
       return 1
@@ -64,14 +64,14 @@ run_init() {
 
   # 2. Vault repo
   if vault_exists; then
-    msg "Vault found at ${C_2}$ENVOY_VAULT${C_RESET}"
+    msg "Vault found at ${C_2}$ENVORA_VAULT${C_RESET}"
     # Auto-detect repo from git remote if not set
-    if [[ -z "$ENVOY_REPO" ]]; then
+    if [[ -z "$ENVORA_REPO" ]]; then
       local remote_url
-      remote_url=$(git -C "$ENVOY_VAULT" remote get-url origin 2>/dev/null)
+      remote_url=$(git -C "$ENVORA_VAULT" remote get-url origin 2>/dev/null)
       if [[ -n "$remote_url" ]]; then
-        ENVOY_REPO=$(echo "$remote_url" | sed 's|.*github\.com[:/]||;s|\.git$||')
-        msg "Detected repo: ${C_2}$ENVOY_REPO${C_RESET}"
+        ENVORA_REPO=$(echo "$remote_url" | sed 's|.*github\.com[:/]||;s|\.git$||')
+        msg "Detected repo: ${C_2}$ENVORA_REPO${C_RESET}"
       fi
     fi
   else
@@ -83,24 +83,24 @@ run_init() {
       local repo_name
       repo_name=$(gum input --prompt="Repo name: " --value="env-vault") || return 1
       msg "Creating private repo..."
-      ENVOY_REPO=$(gh repo create "$repo_name" --private --description "Encrypted env vault managed by envoy" --json nameWithOwner -q '.nameWithOwner' 2>/dev/null)
-      if [[ -z "$ENVOY_REPO" ]]; then
+      ENVORA_REPO=$(gh repo create "$repo_name" --private --description "Encrypted env vault managed by envora" --json nameWithOwner -q '.nameWithOwner' 2>/dev/null)
+      if [[ -z "$ENVORA_REPO" ]]; then
         ui_error "Failed to create repo. Check gh auth."
         return 1
       fi
-      git clone "git@github.com:$ENVOY_REPO.git" "$ENVOY_VAULT" 2>/dev/null
-      ui_success "Created and cloned $ENVOY_REPO"
+      git clone "git@github.com:$ENVORA_REPO.git" "$ENVORA_VAULT" 2>/dev/null
+      ui_success "Created and cloned $ENVORA_REPO"
     else
-      ENVOY_REPO=$(gum input --prompt="GitHub repo (user/name): ") || return 1
-      git clone "git@github.com:$ENVOY_REPO.git" "$ENVOY_VAULT" 2>/dev/null
-      ui_success "Cloned $ENVOY_REPO"
+      ENVORA_REPO=$(gum input --prompt="GitHub repo (user/name): ") || return 1
+      git clone "git@github.com:$ENVORA_REPO.git" "$ENVORA_VAULT" 2>/dev/null
+      ui_success "Cloned $ENVORA_REPO"
     fi
   fi
 
   # 3. Save config
   save_config
   msg ""
-  ui_success "Vault ready at $ENVOY_VAULT"
+  ui_success "Vault ready at $ENVORA_VAULT"
 }
 
 # Push everything: local .env files + Vercel if detected
@@ -183,7 +183,7 @@ _is_vercel_project() {
 
 _push_local_files() {
   local name="$1" source="$2"
-  local vault_dir="$ENVOY_VAULT/$name"
+  local vault_dir="$ENVORA_VAULT/$name"
   local files
   files=$(find_env_files "$source")
   [[ -z "$files" ]] && echo 0 && return
@@ -202,7 +202,7 @@ _push_local_files() {
 
 _push_vercel_files() {
   local name="$1" source="$2"
-  local vault_dir="$ENVOY_VAULT/$name"
+  local vault_dir="$ENVORA_VAULT/$name"
 
   # Auto-link if needed
   if [[ ! -d "$source/.vercel" ]]; then
@@ -239,9 +239,9 @@ _push_vercel_files() {
 
 _vault_commit_push() {
   local message="$1"
-  git -C "$ENVOY_VAULT" add -f -A
-  git -C "$ENVOY_VAULT" commit -m "$message" -q 2>/dev/null
-  git -C "$ENVOY_VAULT" push -q 2>/dev/null
+  git -C "$ENVORA_VAULT" add -f -A
+  git -C "$ENVORA_VAULT" commit -m "$message" -q 2>/dev/null
+  git -C "$ENVORA_VAULT" push -q 2>/dev/null
 }
 
 cmd_pull() {
@@ -249,7 +249,7 @@ cmd_pull() {
   name=$(resolve_project "${1:-}") || return 1
   local dest
   dest=$(resolve_source "$name")
-  local vault_dir="$ENVOY_VAULT/$name"
+  local vault_dir="$ENVORA_VAULT/$name"
 
   if [[ ! -d "$vault_dir" ]]; then
     ui_warn "No vault entry for $name"
@@ -280,7 +280,7 @@ cmd_diff() {
   name=$(resolve_project "${1:-}") || return 1
   local source
   source=$(resolve_source "$name")
-  local vault_dir="$ENVOY_VAULT/$name"
+  local vault_dir="$ENVORA_VAULT/$name"
 
   if [[ ! -d "$vault_dir" ]]; then
     ui_warn "No vault entry for $name (nothing to diff)"
@@ -340,7 +340,7 @@ cmd_diff() {
 
 cmd_list() {
   local projects=()
-  for dir in "$ENVOY_VAULT"/*/; do
+  for dir in "$ENVORA_VAULT"/*/; do
     [[ -d "$dir" ]] || continue
     local name
     name=$(basename "$dir")
@@ -364,7 +364,7 @@ cmd_list() {
 
 cmd_clean() {
   local entries=()
-  for dir in "$ENVOY_VAULT"/*/; do
+  for dir in "$ENVORA_VAULT"/*/; do
     [[ -d "$dir" ]] || continue
     local name
     name=$(basename "$dir")
@@ -379,7 +379,7 @@ cmd_clean() {
     return 0
   fi
 
-  local ev_bin="${ENVOY_BIN:-$0}"
+  local ev_bin="${ENVORA_BIN:-$0}"
   local header
   header=$(printf '%b' "${C_1}clean${C_RESET} │ ${C_DIM}select project to remove${C_RESET}")
 
@@ -405,10 +405,10 @@ cmd_clean() {
     return 0
   fi
 
-  rm -rf "$ENVOY_VAULT/$name"
-  git -C "$ENVOY_VAULT" add -A
-  git -C "$ENVOY_VAULT" commit -m "clean: remove $name" -q 2>/dev/null
-  git -C "$ENVOY_VAULT" push -q 2>/dev/null
+  rm -rf "$ENVORA_VAULT/$name"
+  git -C "$ENVORA_VAULT" add -A
+  git -C "$ENVORA_VAULT" commit -m "clean: remove $name" -q 2>/dev/null
+  git -C "$ENVORA_VAULT" push -q 2>/dev/null
 
   ui_success "Removed $name from vault"
 }

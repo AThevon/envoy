@@ -43,11 +43,11 @@ ui_confirm() {
 
 ui_header() {
   cat >&2 <<EOF
-${C_1} ▄▄▄▄▄▄▄${C_2} ▄▄▄    ▄▄▄${C_3} ▄▄▄▄  ▄▄▄▄${C_4}   ▄▄▄▄▄${C_5}   ▄▄▄   ▄▄▄${C_RESET}
-${C_1}███▀▀▀▀▀${C_2} ████▄  ███${C_3} ▀███  ███▀${C_4} ▄███████▄${C_5} ███   ███${C_RESET}
-${C_1}███▄▄   ${C_2} ███▀██▄███${C_3}  ███  ███${C_4}  ███   ███${C_5} ▀███▄███▀${C_RESET}
-${C_1}███     ${C_2} ███  ▀████${C_3}  ███▄▄███${C_4}  ███▄▄▄███${C_5}   ▀███▀${C_RESET}
-${C_1}▀███████${C_2} ███    ███${C_3}   ▀████▀${C_4}    ▀█████▀${C_5}     ███${C_RESET}
+${C_1} ▄▄▄▄▄▄▄${C_2} ▄▄▄    ▄▄▄${C_3} ▄▄▄▄  ▄▄▄▄${C_4}   ▄▄▄▄▄${C_5}   ▄▄▄▄▄▄▄     ▄▄▄▄${C_RESET}
+${C_1}███▀▀▀▀▀${C_2} ████▄  ███${C_3} ▀███  ███▀${C_4} ▄███████▄${C_5} ███▀▀███▄ ▄██▀▀██▄${C_RESET}
+${C_1}███▄▄   ${C_2} ███▀██▄███${C_3}  ███  ███${C_4}  ███   ███${C_5} ███▄▄███▀ ███  ███${C_RESET}
+${C_1}███     ${C_2} ███  ▀████${C_3}  ███▄▄███${C_4}  ███▄▄▄███${C_5} ███▀▀██▄  ███▀▀███${C_RESET}
+${C_1}▀███████${C_2} ███    ███${C_3}   ▀████▀${C_4}    ▀█████▀${C_5}  ███  ▀███ ███  ███${C_RESET}
 ${C_DIM}                encrypted .env vault${C_RESET}
 EOF
 }
@@ -84,10 +84,10 @@ ${C_BOLD}INTERACTIVE MODE${C_RESET}
   Inside a git repo: shows project-specific actions first
   Outside a repo:    shows global actions (list, config, rotate)
 
-${C_BOLD}CONFIG${C_RESET}  ~/.envoyrc
-  ENVOY_VAULT    Path to vault directory     (default: ~/.env-vault)
-  ENVOY_KEY      Path to age private key     (default: ~/.age/key.txt)
-  ENVOY_PROJECTS Path to projects directory  (default: ~/projects)
-  ENVOY_REPO     GitHub repo for the vault   (set during init)
+${C_BOLD}CONFIG${C_RESET}  ~/.envorarc
+  ENVORA_VAULT    Path to vault directory     (default: ~/.env-vault)
+  ENVORA_KEY      Path to age private key     (default: ~/.age/key.txt)
+  ENVORA_PROJECTS Path to projects directory  (default: ~/projects)
+  ENVORA_REPO     GitHub repo for the vault   (set during init)
 EOF
 }

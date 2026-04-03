@@ -3,19 +3,19 @@
 
 # Derive public key from private key
 get_public_key() {
-  age-keygen -y "$ENVOY_KEY" 2>/dev/null
+  age-keygen -y "$ENVORA_KEY" 2>/dev/null
 }
 
 encrypt_file() {
   local src="$1" dest="$2"
   local pub
-  pub=$(get_public_key) || { ui_error "Cannot read key at $ENVOY_KEY"; return 1; }
+  pub=$(get_public_key) || { ui_error "Cannot read key at $ENVORA_KEY"; return 1; }
   age -r "$pub" -o "$dest" "$src"
 }
 
 decrypt_file() {
   local src="$1" dest="$2"
-  age -d -i "$ENVOY_KEY" -o "$dest" "$src"
+  age -d -i "$ENVORA_KEY" -o "$dest" "$src"
 }
 
 # Find .env files in a directory (excludes .example and .age)
@@ -45,12 +45,12 @@ cmd_rotate() {
 
   local count=0
   while IFS= read -r f; do
-    local rel="${f#$ENVOY_VAULT/}"
+    local rel="${f#$ENVORA_VAULT/}"
     local dest="$tmpdir/${rel%.age}"
     mkdir -p "$(dirname "$dest")"
     decrypt_file "$f" "$dest" || { ui_error "Failed to decrypt: $f"; rm -rf "$tmpdir"; return 1; }
     count=$((count + 1))
-  done < <(find "$ENVOY_VAULT" -name "*.age" -type f ! -path "*/.git/*")
+  done < <(find "$ENVORA_VAULT" -name "*.age" -type f ! -path "*/.git/*")
 
   if [[ $count -eq 0 ]]; then
     ui_warn "No encrypted files found in vault"
@@ -60,28 +60,28 @@ cmd_rotate() {
 
   # 2. Generate new key
   msg "Generating new key..."
-  age-keygen -o "$ENVOY_KEY" 2>&1 >&2
-  chmod 600 "$ENVOY_KEY"
+  age-keygen -o "$ENVORA_KEY" 2>&1 >&2
+  chmod 600 "$ENVORA_KEY"
 
   # 3. Re-encrypt with new key
   msg "Re-encrypting $count files..."
   while IFS= read -r f; do
     local rel="${f#$tmpdir/}"
-    local dest="$ENVOY_VAULT/${rel}.age"
+    local dest="$ENVORA_VAULT/${rel}.age"
     mkdir -p "$(dirname "$dest")"
     encrypt_file "$f" "$dest"
   done < <(find "$tmpdir" -name ".env*" -type f)
   rm -rf "$tmpdir"
 
   # 4. Commit + push
-  git -C "$ENVOY_VAULT" add -f -A
-  git -C "$ENVOY_VAULT" commit -m "rotate: re-encrypt with new key" -q 2>/dev/null
-  git -C "$ENVOY_VAULT" push -q 2>/dev/null
+  git -C "$ENVORA_VAULT" add -f -A
+  git -C "$ENVORA_VAULT" commit -m "rotate: re-encrypt with new key" -q 2>/dev/null
+  git -C "$ENVORA_VAULT" push -q 2>/dev/null
 
   msg ""
   ui_success "Key rotated, $count files re-encrypted"
   msg ""
   msg "${C_BOLD}IMPORTANT:${C_RESET} Save the new key in your password manager:"
   msg ""
-  cat "$ENVOY_KEY" >&2
+  cat "$ENVORA_KEY" >&2
 }

@@ -1,40 +1,40 @@
 #!/usr/bin/env bash
 # lib/config.sh - Configuration management
 
-ENVOY_RC="$HOME/.envoyrc"
+ENVORA_RC="$HOME/.envorarc"
 
 # Defaults
-ENVOY_VAULT="${ENVOY_VAULT:-$HOME/.env-vault}"
-ENVOY_KEY="${ENVOY_KEY:-$HOME/.age/key.txt}"
-ENVOY_PROJECTS="${ENVOY_PROJECTS:-$HOME/projects}"
-ENVOY_REPO="${ENVOY_REPO:-}"
+ENVORA_VAULT="${ENVORA_VAULT:-$HOME/.env-vault}"
+ENVORA_KEY="${ENVORA_KEY:-$HOME/.age/key.txt}"
+ENVORA_PROJECTS="${ENVORA_PROJECTS:-$HOME/projects}"
+ENVORA_REPO="${ENVORA_REPO:-}"
 
 load_config() {
-  if [[ -f "$ENVOY_RC" ]]; then
-    source "$ENVOY_RC"
+  if [[ -f "$ENVORA_RC" ]]; then
+    source "$ENVORA_RC"
   fi
 }
 
 save_config() {
-  cat > "$ENVOY_RC" <<EOF
-ENVOY_VAULT="$ENVOY_VAULT"
-ENVOY_KEY="$ENVOY_KEY"
-ENVOY_PROJECTS="$ENVOY_PROJECTS"
-ENVOY_REPO="$ENVOY_REPO"
+  cat > "$ENVORA_RC" <<EOF
+ENVORA_VAULT="$ENVORA_VAULT"
+ENVORA_KEY="$ENVORA_KEY"
+ENVORA_PROJECTS="$ENVORA_PROJECTS"
+ENVORA_REPO="$ENVORA_REPO"
 EOF
 }
 
 cmd_config() {
-  local ev_bin="${ENVOY_BIN:-$0}"
+  local ev_bin="${ENVORA_BIN:-$0}"
 
   local header
-  header="$(printf '%b' "${C_2}config${C_RESET} │ ${C_DIM}${ENVOY_RC}${C_RESET}")"
+  header="$(printf '%b' "${C_2}config${C_RESET} │ ${C_DIM}${ENVORA_RC}${C_RESET}")"
 
   local menu_items=(
-    "vault   │ ${C_2}◈${C_RESET}  Vault path       ${C_DIM}${ENVOY_VAULT}${C_RESET}"
-    "key     │ ${C_2}⚿${C_RESET}  Key path         ${C_DIM}${ENVOY_KEY}${C_RESET}"
-    "projects│ ${C_2}▤${C_RESET}  Projects path    ${C_DIM}${ENVOY_PROJECTS}${C_RESET}"
-    "repo    │ ${C_2}⊞${C_RESET}  GitHub repo      ${C_DIM}${ENVOY_REPO:-not set}${C_RESET}"
+    "vault   │ ${C_2}◈${C_RESET}  Vault path       ${C_DIM}${ENVORA_VAULT}${C_RESET}"
+    "key     │ ${C_2}⚿${C_RESET}  Key path         ${C_DIM}${ENVORA_KEY}${C_RESET}"
+    "projects│ ${C_2}▤${C_RESET}  Projects path    ${C_DIM}${ENVORA_PROJECTS}${C_RESET}"
+    "repo    │ ${C_2}⊞${C_RESET}  GitHub repo      ${C_DIM}${ENVORA_REPO:-not set}${C_RESET}"
   )
 
   local tmpfile
@@ -64,10 +64,10 @@ cmd_config() {
   local current=""
   local var_name=""
   case "$cmd" in
-    vault)    current="$ENVOY_VAULT"; var_name="ENVOY_VAULT" ;;
-    key)      current="$ENVOY_KEY"; var_name="ENVOY_KEY" ;;
-    projects) current="$ENVOY_PROJECTS"; var_name="ENVOY_PROJECTS" ;;
-    repo)     current="$ENVOY_REPO"; var_name="ENVOY_REPO" ;;
+    vault)    current="$ENVORA_VAULT"; var_name="ENVORA_VAULT" ;;
+    key)      current="$ENVORA_KEY"; var_name="ENVORA_KEY" ;;
+    projects) current="$ENVORA_PROJECTS"; var_name="ENVORA_PROJECTS" ;;
+    repo)     current="$ENVORA_REPO"; var_name="ENVORA_REPO" ;;
     *) return 0 ;;
   esac
 
@@ -75,10 +75,10 @@ cmd_config() {
   new_value=$(gum input --prompt="$var_name: " --value="$current") || return 0
 
   case "$cmd" in
-    vault)    ENVOY_VAULT="$new_value" ;;
-    key)      ENVOY_KEY="$new_value" ;;
-    projects) ENVOY_PROJECTS="$new_value" ;;
-    repo)     ENVOY_REPO="$new_value" ;;
+    vault)    ENVORA_VAULT="$new_value" ;;
+    key)      ENVORA_KEY="$new_value" ;;
+    projects) ENVORA_PROJECTS="$new_value" ;;
+    repo)     ENVORA_REPO="$new_value" ;;
   esac
 
   save_config

@@ -1,7 +1,7 @@
 { lib, stdenvNoCC, makeWrapper, age, fzf, gum, gh, jq }:
 
 stdenvNoCC.mkDerivation rec {
-  pname = "envoy";
+  pname = "envora";
   version = "0.1.0";
 
   src = ./.;
@@ -10,19 +10,19 @@ stdenvNoCC.mkDerivation rec {
 
   installPhase = ''
     install -Dm755 ev.sh $out/bin/ev
-    mkdir -p $out/lib/envoy
-    cp lib/*.sh $out/lib/envoy/
+    mkdir -p $out/lib/envora
+    cp lib/*.sh $out/lib/envora/
   '';
 
   postFixup = ''
     wrapProgram $out/bin/ev \
-      --set ENVOY_LIB "$out/lib/envoy" \
+      --set ENVORA_LIB "$out/lib/envora" \
       --prefix PATH : ${lib.makeBinPath [ age fzf gum gh jq ]}
   '';
 
   meta = with lib; {
     description = "Encrypted .env vault manager with age encryption and git-backed storage";
-    homepage = "https://github.com/AThevon/envoy";
+    homepage = "https://github.com/AThevon/envora";
     license = licenses.mit;
     platforms = platforms.unix;
     mainProgram = "ev";
