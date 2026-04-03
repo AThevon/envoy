@@ -39,8 +39,9 @@ fi
 # =============================================================================
 
 case "${1:-}" in
-  _hub-preview)  load_config; shift; hub_preview "$@"; exit 0 ;;
-  _list-preview) load_config; shift; list_preview "$@"; exit 0 ;;
+  _hub-preview)    load_config; shift; hub_preview "$@"; exit 0 ;;
+  _list-preview)   load_config; shift; list_preview "$@"; exit 0 ;;
+  _config-preview) load_config; shift; config_preview "$@"; exit 0 ;;
 esac
 
 # =============================================================================
